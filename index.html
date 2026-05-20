@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Why JoJo Time Stop Breaks Physics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #050510;
+      --bg-alt: #0b0b1a;
+      --accent: #ffcc33;
+      --accent-soft: rgba(255, 204, 51, 0.15);
+      --accent-strong: #ffeb80;
+      --text: #f5f5ff;
+      --muted: #a0a0c0;
+      --danger: #ff4b6e;
+      --card: #141428;
+      --border: rgba(255, 255, 255, 0.08);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.6);
+      --shadow-glow: 0 0 40px rgba(255, 204, 51, 0.25);
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --transition-fast: 0.25s ease-out;
+      --transition-med: 0.4s ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background: radial-gradient(circle at top, #1a1a3a 0, #050510 55%, #020208 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Start screen overlay */
+    #start-screen {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(255, 204, 51, 0.12) 0, transparent 55%),
+        radial-gradient(circle at 80% 80%, rgba(255, 75, 110, 0.18) 0, transparent 60%),
+        #050510;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #start-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .start-card {
+      max-width: 720px;
+      padding: 40px 32px 32px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(10, 10, 30, 0.96), rgba(10, 10, 30, 0.96));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow-soft), var(--shadow-glow);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .start-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(255, 204, 51, 0.12) 0, transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(255, 75, 110, 0.18) 0, transparent 60%);
+      opacity: 0.7;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .start-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .start-title {
+      font-size: 2.4rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .start-subtitle {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .start-highlight {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 204, 51, 0.12);
+      color: var(--accent-strong);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 18px;
+    }
+
+    .start-highlight span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(255, 204, 51, 0.9);
+    }
+
+    .start-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 24px 0 28px;
+    }
+
+    .start-pill {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(10, 10, 30, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    .start-pill strong {
+      display: block;
+      color: var(--accent-strong);
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+
+    .start-button {
+      margin-top: 8px;
+      padding: 12px 26px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #ffcc33, #ff4b6e);
+      color: #1a1020;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-size: 0.9rem;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .start-button span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .start-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.4) 0, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .start-button:hover::before {
+      opacity: 1;
+    }
+
+    .start-meta {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .start-meta span {
+      color: var(--accent-strong);
+    }
+
+    /* Main layout */
+    .page {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .page.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      background: linear-gradient(to bottom, rgba(5, 5, 16, 0.96), rgba(5, 5, 16, 0.7), transparent);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffcc33, #ff4b6e);
+      box-shadow: 0 0 18px rgba(255, 204, 51, 0.7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-logo::after {
+      content: "";
+      position: absolute;
+      inset: 18%;
+      border-radius: 50%;
+      border: 2px solid rgba(5, 5, 16, 0.7);
+    }
+
+    .nav-title {
+      font-size: 1rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-strong);
+    }
+
+    .nav-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--muted);
+      cursor: pointer;
+      background: rgba(10, 10, 30, 0.7);
+      transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform 0.15s ease-out;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 204, 51, 0.12);
+      color: var(--accent-strong);
+      border-color: rgba(255, 204, 51, 0.6);
+      transform: translateY(-1px);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 18px 60px;
+    }
+
+    section {
+      margin: 40px 0;
+      position: relative;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .section-subtitle {
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 640px;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 800px) {
+      .section-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(255, 204, 51, 0.06), transparent 55%), var(--card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 18px 18px 20px;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at 0 0, rgba(255, 204, 51, 0.08) 0, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+    }
+
+    .card-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 204, 51, 0.12);
+      color: var(--accent-strong);
+    }
+
+    .card-body {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .card-body p + p {
+      margin-top: 8px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+    }
+
+    .pill strong {
+      color: var(--accent-strong);
+    }
+
+    .image-card {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: radial-gradient(circle at top, rgba(255, 204, 51, 0.18), rgba(10, 10, 30, 0.96));
+      box-shadow: var(--shadow-soft), var(--shadow-glow);
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.4;
+      mix-blend-mode: screen;
+      filter: saturate(1.2) contrast(1.1);
+    }
+
+    .image-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 0, rgba(255, 255, 255, 0.18), transparent 55%);
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+
+    .image-caption {
+      position: relative;
+      padding: 16px 16px 18px;
+      background: linear-gradient(to top, rgba(5, 5, 16, 0.96), transparent);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .image-caption strong {
+      color: var(--accent-strong);
+    }
+
+    .image-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      background: rgba(5, 5, 16, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--accent-strong);
+    }
+
+    .math-block {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.85rem;
+      color: var(--accent-strong);
+      overflow-x: auto;
+    }
+
+    .math-block span {
+      color: var(--muted);
+    }
+
+    .math-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .mini-card {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .mini-card strong {
+      display: block;
+      color: var(--accent-strong);
+      margin-bottom: 4px;
+    }
+
+    .callout {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 204, 51, 0.08);
+      border: 1px solid rgba(255, 204, 51, 0.4);
+      font-size: 0.85rem;
+      color: var(--accent-strong);
+    }
+
+    .callout span {
+      color: var(--muted);
+    }
+
+    .timeline {
+      margin-top: 18px;
+      border-left: 2px solid rgba(255, 255, 255, 0.12);
+      padding-left: 14px;
+    }
+
+    .timeline-item {
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -15px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(255, 204, 51, 0.9);
+    }
+
+    .timeline-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .timeline-title {
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+
+    .timeline-body {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .equation-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .equation-chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--accent-strong);
+    }
+
+    .equation-chip span {
+      color: var(--muted);
+    }
+
+    .whatifs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .whatif-card {
+      padding: 14px 14px 16px;
+      border-radius: var(--radius-lg);
+      background: radial-gradient(circle at top left, rgba(255, 75, 110, 0.16), transparent 55%), rgba(10, 10, 30, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .whatif-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at 100% 0, rgba(255, 204, 51, 0.18) 0, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .whatif-card:hover::before {
+      opacity: 1;
+    }
+
+    .whatif-level {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .whatif-title {
+      font-size: 1rem;
+      margin-bottom: 4px;
+      color: var(--accent-strong);
+    }
+
+    .whatif-body {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .whatif-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(5, 5, 16, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--danger);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-note span {
+      color: var(--accent-strong);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .footer-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(10, 10, 30, 0.9);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Scroll reveal animation */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Simple floating animation for images */
+    .float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- START SCREEN -->
+  <div id="start-screen">
+    <div class="start-card">
+      <div class="start-inner">
+        <div class="start-highlight">
+          <span></span>
+          TIME STOP vs PHYSICS
+        </div>
+        <h1 class="start-title">Can JoJo’s Time Stop Exist in Our Universe?</h1>
+        <p class="start-subtitle">
+          A visual walk through basic physics, Newton’s laws, and why stopping time for one person
+          shatters the rules that keep reality glued together.
+        </p>
+
+        <div class="start-grid">
+          <div class="start-pill">
+            <strong>No physics background needed</strong>
+            We start from zero: what time is, how motion works, and what Newton’s three laws say.
+          </div>
+          <div class="start-pill">
+            <strong>JoJo explained simply</strong>
+            What Stands are, what “time stop” means in the story, and how it’s supposed to look.
+          </div>
+          <div class="start-pill">
+            <strong>Math, but friendly</strong>
+            We show the key equations in plain language and explain what each symbol really means.
+          </div>
+        </div>
+
+        <button class="start-button" id="enter-btn">
+          <span>Enter the Time Stop</span>
+        </button>
+
+        <div class="start-meta">
+          Scroll‑driven animations • Inline math • <span>Progressively insane what‑ifs</span> at the bottom
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN PAGE -->
+  <div class="page" id="page">
+    <header>
+      <div class="nav">
+        <div class="nav-left">
+          <div class="nav-logo"></div>
+          <div>
+            <div class="nav-title">Time Stop vs Newton</div>
+            <div class="nav-sub">JoJo’s Bizarre Adventure under a very annoyed physics teacher</div>
+          </div>
+        </div>
+        <div class="nav-links">
+          <div class="nav-link" data-scroll="#jojo">JoJo basics</div>
+          <div class="nav-link" data-scroll="#physics">Physics 101</div>
+          <div class="nav-link" data-scroll="#breakdown">Why it breaks</div>
+          <div class="nav-link" data-scroll="#math">The math</div>
+          <div class="nav-link" data-scroll="#whatifs">What‑ifs</div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- SECTION: JOJO BASICS -->
+      <section id="jojo" class="reveal">
+        <div class="section-label">Part 1</div>
+        <h2 class="section-title">What “Time Stop” Means in JoJo’s Bizarre Adventure</h2>
+        <p class="section-subtitle">
+          Before we argue with the laws of nature, we need to know what the story is actually claiming.
+          Here’s the idea of Stands and time stop, explained from scratch.
+        </p>
+
+        <div class="section-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Stands: Battle spirits with superpowers</h3>
+              <div class="card-tag">JoJo lore</div>
+            </div>
+            <div class="card-body">
+              <p>
+                In <strong>JoJo’s Bizarre Adventure</strong>, many characters fight using “Stands”:
+                invisible, spirit‑like beings that only Stand users can see. A Stand is like a personal
+                battle avatar. It can punch, defend, and use special abilities, but it is tied to its user.
+              </p>
+              <p>
+                If the Stand is hurt, the user is hurt. If the Stand moves, it’s as if the user is acting
+                through it. Different Stands have different powers: some punch very fast, some control fire,
+                some manipulate luck, and a few mess with time itself.
+              </p>
+              <div class="pill-row">
+                <div class="pill"><strong>Link:</strong> Stand health ↔ user health</div>
+                <div class="pill"><strong>Visibility:</strong> Only Stand users can see them</div>
+                <div class="pill"><strong>Variety:</strong> Physical, mental, and time‑based powers</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="image-card float">
+            <!-- Replace src with actual JoJo Stand art URL if you host one -->
+            <img src="https://tse3.mm.bing.net/th/id/OIP.oY7vtVpKxwmkGR9VqKfYEQHaJc?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" alt="Stylized Stand illustration placeholder" />
+            <div class="image-overlay"></div>
+            <div class="image-badge">Visual</div>
+            <div class="image-caption">
+              <strong>Star platnuim</strong><br />
+              this is one of the time stop stands
+        </div>
+
+        <div class="section-grid" style="margin-top: 26px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">So what is “time stop” in the story?</h3>
+              <div class="card-tag">The ability</div>
+            </div>
+            <div class="card-body">
+              <p>
+                In Part 3, the villain <strong>DIO</strong> has a Stand called <em>The World</em>, and the
+                hero <strong>Jotaro</strong> has <em>Star Platinum</em>. Both eventually gain the ability to
+                “stop time.” From their point of view, everything around them freezes: people, bullets, cars,
+                even falling drops of blood.
+              </p>
+              <p>
+                While time is “stopped,” they can move around, reposition themselves, punch enemies, and move
+                objects. After a few seconds of their personal time, the world resumes, and everyone else
+                experiences all the changes at once.
+              </p>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-label">Step 1</div>
+                  <div class="timeline-title">User activates time stop</div>
+                  <div class="timeline-body">
+                    The world appears to freeze. Only the user and their Stand can move and think.
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-label">Step 2</div>
+                  <div class="timeline-title">User acts in “frozen” world</div>
+                  <div class="timeline-body">
+                    They walk, punch, move bullets, reposition objects—everyone else is stuck mid‑motion.
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-label">Step 3</div>
+                  <div class="timeline-title">Time resumes</div>
+                  <div class="timeline-body">
+                    To everyone else, time never stopped. They just suddenly feel the punches or see bullets
+                    in new places.
+                  </div>
+                </div>
+              </div>
+              <div class="callout">
+                In‑universe claim: <span>“Time itself stops for everyone except the user.”</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Already suspicious: “Time for everyone but me”</h3>
+              <div class="card-tag">Red flag</div>
+            </div>
+            <div class="card-body">
+              <p>
+                Even before we write down equations, there’s a big conceptual problem: time is usually treated
+                as something that flows for the whole universe at once. Saying “time stops for everyone except
+                me” is like saying “gravity pulls on everything except my shoes.”
+              </p>
+              <p>
+                To see exactly why this is such a problem, we need a tiny bit of physics: what time is, how
+                motion works, and what Newton’s three laws actually say.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: PHYSICS BASICS -->
+      <section id="physics" class="reveal">
+        <div class="section-label">Part 2</div>
+        <h2 class="section-title">Time, Motion, and Newton’s Three Laws (From Zero)</h2>
+        <p class="section-subtitle">
+          Here’s the minimum physics we need: what time means, how we describe motion, and the three rules
+          Newton wrote down that still power most of engineering today.
+        </p>
+
+        <div class="section-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">What “time” means in physics</h3>
+              <div class="card-tag">Concept</div>
+            </div>
+            <div class="card-body">
+              <p>
+                In everyday life, time is just “what clocks measure” and “the order of events”—breakfast,
+                then lunch, then dinner. In physics, time is treated as a <strong>dimension</strong>, like
+                left–right or up–down. Things move not only through space but also from past to future.
+              </p>
+              <p>
+                Any change—moving, heating up, cooling down, vibrating—happens <em>over</em> time. If time
+                literally stopped, no change at all could happen: no motion, no thinking, no light, nothing.
+              </p>
+              <div class="math-label">Key idea</div>
+              <div class="math-block">
+                Change needs time.<br />
+                If there is no time, there is no “before” and “after,” and nothing can move or evolve.
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Newton’s three laws in plain language</h3>
+              <div class="card-tag">The rules</div>
+            </div>
+            <div class="card-body">
+              <div class="two-col">
+                <div class="mini-card">
+                  <strong>1. Inertia</strong>
+                  If nothing pushes or pulls on an object, it keeps doing what it’s doing. If it’s still, it
+                  stays still. If it’s moving, it keeps moving in a straight line at the same speed.
+                </div>
+                <div class="mini-card">
+                  <strong>2. Force and acceleration</strong>
+                  If you push or pull (apply a force), you change how something moves. The rule is:
+                  <br /><br />
+                  <code>F = m · a</code><br />
+                  where F is force, m is mass, and a is acceleration.
+                </div>
+                <div class="mini-card">
+                  <strong>3. Action–reaction</strong>
+                  If you push on something, it pushes back on you equally hard in the opposite direction. You
+                  push the ground backward; the ground pushes you forward.
+                </div>
+              </div>
+              <div class="equation-row">
+                <div class="equation-chip">
+                  v = distance / time <span> → speed needs time</span>
+                </div>
+                <div class="equation-chip">
+                  a = Δv / Δt <span> → acceleration needs time</span>
+                </div>
+                <div class="equation-chip">
+                  F = m · a <span> → force depends on acceleration</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: WHY TIME STOP BREAKS PHYSICS -->
+      <section id="breakdown" class="reveal">
+        <div class="section-label">Part 3</div>
+        <h2 class="section-title">Why a Literal Time Stop Cannot Work</h2>
+        <p class="section-subtitle">
+          Now we combine the story’s claim (“time stops for everyone except the user”) with the physics we
+          just laid out. We’ll see that basic things like breathing, seeing, and even thinking fall apart.
+        </p>
+
+        <div class="section-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Air and breathing</h3>
+              <div class="card-tag">Problem #1</div>
+            </div>
+            <div class="card-body">
+              <p>
+                Air is made of tiny moving molecules. Breathing works because you expand your chest, and air
+                molecules move in to fill the space. That motion is just particles bouncing around over time.
+              </p>
+              <p>
+                If time stops, those molecules stop moving. You try to inhale, but nothing can flow into your
+                lungs. You’re effectively trying to move your chest into a solid, frozen block of air.
+              </p>
+              <div class="math-label">Breathing as motion</div>
+              <div class="math-block">
+                For air molecules:<br />
+                v<sub>air</sub> = distance / time<br />
+                If time → 0, then v<sub>air</sub> → 0.<br />
+                No motion → no breathing.
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Light and seeing</h3>
+              <div class="card-tag">Problem #2</div>
+            </div>
+            <div class="card-body">
+              <p>
+                Light is made of particles called photons that move through space at the speed of light. To
+                see, light has to leave objects, travel to your eyes, and be processed by your brain.
+              </p>
+              <p>
+                If time stops, photons stop moving. No new light reaches your eyes, and your brain can’t
+                process anything because brain activity also needs time. The result is total darkness and no
+                conscious experience during the “stop.”
+              </p>
+              <div class="math-label">Light needs time</div>
+              <div class="math-block">
+                Speed of light: c = distance / time<br />
+                If time is frozen, no distance can be covered. Light cannot travel.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-grid" style="margin-top: 24px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Muscles, nerves, and motion</h3>
+              <div class="card-tag">Problem #3</div>
+            </div>
+            <div class="card-body">
+              <p>
+                To move your arm, you need chemical reactions in your muscles and electrical signals in your
+                nerves. All of that is change over time. If time is frozen, no reactions, no signals, no
+                muscle contractions can occur.
+              </p>
+              <p>
+                That means the user and their Stand would be just as frozen as everyone else. A true global
+                time stop doesn’t let one person move; it locks <em>everything</em>.
+              </p>
+              <div class="math-label">Motion as change</div>
+              <div class="math-block">
+                Any motion: Δposition ≠ 0<br />
+                Requires: Δt &gt; 0<br />
+                If Δt = 0, then Δposition must be 0. No movement.
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Newton’s laws collapse</h3>
+              <div class="card-tag">Problem #4</div>
+            </div>
+            <div class="card-body">
+              <p>
+                Newton’s laws assume time is flowing. “Keeps moving” or “stays still” only makes sense if
+                time passes. Acceleration is “change in speed per unit time.” No time means no acceleration.
+              </p>
+              <p>
+                If time is literally stopped, the equations themselves stop making sense. They’re built on the
+                idea that time is a thing that moves forward. A true time stop is not just unlikely—it’s
+                incompatible with the way physics is defined.
+              </p>
+              <div class="callout">
+                A literal “time stop for everyone but me” is not just hard to do—it contradicts the basic
+                definitions of motion and force.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: MATH AND SUPER SPEED INTERPRETATION -->
+      <section id="math" class="reveal">
+        <div class="section-label">Part 4</div>
+        <h2 class="section-title">Trying to Rescue Time Stop with Math (and Failing)</h2>
+        <p class="section-subtitle">
+          Some fans try to reinterpret time stop as “the user is just moving incredibly fast.” This uses real
+          ideas from relativity, but it still runs into impossible energy, broken bodies, and shattered
+          causality.
+        </p>
+
+        <div class="section-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Speed, acceleration, and force</h3>
+              <div class="card-tag">Core equations</div>
+            </div>
+            <div class="card-body">
+              <p>
+                Let’s write down the basic math for motion. Don’t worry—we’ll explain each symbol in plain
+                language.
+              </p>
+              <div class="math-block">
+                1. Speed (how fast something moves):<br />
+                v = d / t<br />
+                where v is speed, d is distance, and t is time.<br /><br />
+                2. Acceleration (how quickly speed changes):<br />
+                a = Δv / Δt<br />
+                where Δv is the change in speed, and Δt is the time it took.<br /><br />
+                3. Newton’s second law (force):<br />
+                F = m · a<br />
+                where F is force, m is mass, and a is acceleration.
+              </div>
+              <p>
+                If you want someone to go from rest (v = 0) to some huge speed in a tiny amount of time, the
+                acceleration a becomes enormous. That means the required force F becomes enormous too.
+              </p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Relativity: time slows when you move fast</h3>
+              <div class="card-tag">Einstein enters</div>
+            </div>
+            <div class="card-body">
+              <p>
+                Einstein’s special relativity says that when you move very fast (close to the speed of light),
+                time for you slows down compared to someone standing still. To you, your own time feels
+                normal, but the outside world seems sped up.
+              </p>
+              <p>
+                If you could move at exactly the speed of light (which real objects with mass cannot), time
+                for you would appear to stop. So some people say: maybe the time stop user is just moving
+                incredibly fast, so the world looks frozen.
+              </p>
+              <div class="math-label">Relativistic time dilation (conceptual)</div>
+              <div class="math-block">
+                Moving fast → your clock ticks slower.<br />
+                At the speed of light (for massless things like light itself), time doesn’t “pass” in the
+                usual sense.
+              </div>
+              <p>
+                This is closer to real physics than a literal time stop, but it still causes huge problems:
+                air resistance, shockwaves, insane energy requirements, and a brain that would need to think
+                millions of times faster.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 26px;">
+          <div class="card-header">
+            <h3 class="card-title">What if we give the user infinite speed?</h3>
+            <div class="card-tag">First what‑if</div>
+          </div>
+          <div class="card-body">
+            <p>
+              Let’s push the idea to the extreme: suppose the user can move with <strong>infinite speed</strong>.
+              That means they can cross any distance in zero time. What does the math say?
+            </p>
+            <div class="math-label">Speed definition</div>
+            <div class="math-block">
+              v = d / t<br />
+              Infinite speed → v → ∞.<br />
+              For that to happen with finite distance d, time t must go to 0.<br /><br />
+              That means: you cover a non‑zero distance in zero time.
+            </div>
+            <p>
+              This breaks the idea of speed itself. You’re effectively everywhere along your path at once, or
+              you’re teleporting. It also wrecks causality: in some ways of looking at space and time, you
+              could arrive somewhere before you left.
+            </p>
+            <div class="math-label">Force needed for infinite speed</div>
+            <div class="math-block">
+              Start at rest: v<sub>initial</sub> = 0<br />
+              End at infinite speed: v<sub>final</sub> → ∞<br />
+              Acceleration: a = Δv / Δt → ∞ / finite → ∞<br /><br />
+              Newton’s second law: F = m · a<br />
+              If m ≠ 0 and a → ∞, then F → ∞.<br />
+              You need infinite force.
+            </div>
+            <p>
+              So even our first “what if” (infinite speed) already demands infinite acceleration and infinite
+              force, which no universe with finite energy can provide.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: WHAT-IFS -->
+      <section id="whatifs" class="reveal">
+        <div class="section-label">Part 5</div>
+        <h2 class="section-title">Progressively More Insane What‑Ifs</h2>
+        <p class="section-subtitle">
+          Now we lean into the fun part. We’ll keep granting the time stop user more ridiculous powers and
+          watch which parts of physics break next, from Newton’s laws to causality to the idea of a single
+          universe.
+        </p>
+
+        <div class="whatifs-grid">
+          <!-- WHAT IF 1 -->
+          <div class="whatif-card">
+            <div class="whatif-tag">Level 1</div>
+            <div class="whatif-level">What if #1</div>
+            <div class="whatif-title">Infinite speed, but nothing else</div>
+            <div class="whatif-body">
+              We already saw that infinite speed means you cross any distance in zero time. That breaks the
+              definition of speed and lets you arrive somewhere “instantly.” In some viewpoints, you could
+              arrive before you leave, which scrambles cause and effect.
+              <br /><br />
+              Newton’s second law also explodes: to go from rest to infinite speed in any finite time, your
+              acceleration must be infinite, so the required force is infinite. We’ve broken both the math and
+              the idea that causes must come before effects.
+            </div>
+          </div>
+
+          <!-- WHAT IF 2 -->
+          <div class="whatif-card">
+            <div class="whatif-tag">Level 2</div>
+            <div class="whatif-level">What if #2</div>
+            <div class="whatif-title">Infinite speed + infinite force</div>
+            <div class="whatif-body">
+              Suppose we “fix” the previous problem by just giving the user infinite force and infinite
+              acceleration as well. Now they can reach infinite speed without worrying about the required
+              push.
+              <br /><br />
+              But infinite force means any interaction is catastrophic. Punching someone would accelerate them
+              infinitely fast, effectively tearing their matter out of the normal universe. Touching the
+              ground could shatter the planet. Conservation of energy and momentum are gone, and the user’s
+              energy would curve spacetime so violently that they’d behave like a singularity.
+            </div>
+          </div>
+
+          <!-- WHAT IF 3 -->
+          <div class="whatif-card">
+            <div class="whatif-tag">Level 3</div>
+            <div class="whatif-level">What if #3</div>
+            <div class="whatif-title">Ignoring inertia and mass entirely</div>
+            <div class="whatif-body">
+              New rule: the user can change their speed however they like with no force, no inertia, and no
+              reaction on anything else. They can start, stop, and turn instantly without pushing on the
+              ground or the air.
+              <br /><br />
+              This throws out Newton’s first and third laws. Objects no longer need forces to change motion,
+              and there’s no equal‑and‑opposite reaction. The user becomes a walking exception to the
+              symmetry of the universe, breaking the idea that the laws of physics look the same in every
+              frame of reference.
+            </div>
+          </div>
+
+          <!-- WHAT IF 4 -->
+          <div class="whatif-card">
+            <div class="whatif-tag">Level 4</div>
+            <div class="whatif-level">What if #4</div>
+            <div class="whatif-title">Local time bubble</div>
+            <div class="whatif-body">
+              Instead of moving fast, suppose the user controls time in a bubble around themselves. Inside the
+              bubble, time flows normally; outside, time is slowed or stopped. This matches how JoJo often
+              visually presents time stop.
+              <br /><br />
+              At the bubble’s edge, time flows at different rates on each side, creating a violent “time
+              gradient.” That’s like an extreme version of gravitational time dilation near a black hole, but
+              even sharper. Signals and matter crossing the boundary would behave in bizarre ways, and
+              conservation of energy becomes very hard to maintain when you restart time with objects in new
+              positions and speeds.
+            </div>
+          </div>
+
+          <!-- WHAT IF 5 -->
+          <div class="whatif-card">
+            <div class="whatif-tag">Level 5</div>
+            <div class="whatif-level">What if #5</div>
+            <div class="whatif-title">Editing causality itself</div>
+            <div class="whatif-body">
+              Now we go full narrative god mode: the user doesn’t just stop time; they can insert a hidden
+              segment of time where only they act, then force the universe to accept the result as if it had
+              always been that way.
+              <br /><br />
+              The same past can now lead to different futures depending on whether the user intervenes. The
+              mapping from “past state” to “future state” is no longer unique. We’ve left physics and entered
+              script editing: the user has author‑level privileges over cause and effect.
+            </div>
+          </div>
+
+          <!-- WHAT IF 6 -->
+          <div class="whatif-card">
+            <div class="whatif-tag">Level 6</div>
+            <div class="whatif-level">What if #6</div>
+            <div class="whatif-title">Resetting and rewriting the universe</div>
+            <div class="whatif-body">
+              Final boss scenario: the user can stop time, rearrange everything, and then restart in a
+              <em>new</em> universe where their changes are baked into the starting conditions. Each use
+              effectively creates a new branch of reality.
+              <br /><br />
+              Now we’re not just breaking Newton’s laws or relativity; we’re breaking the idea of a single,
+              continuous universe. Identity, continuity, and even the meaning of “time” become fuzzy. At this
+              point, the user isn’t a physical object at all—they’re more like the writer of the story,
+              editing the timeline from outside.
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 26px;">
+          <div class="card-header">
+            <h3 class="card-title">Direct verdict</h3>
+            <div class="card-tag">Summary</div>
+          </div>
+          <div class="card-body">
+            <p>
+              A literal time stop where everything freezes except one person cannot coexist with Newton’s
+              three laws or basic ideas like breathing, seeing, and thinking. Even if we reinterpret it as
+              super speed or relativistic time dilation, we run into impossible energy demands and catastrophic
+              side effects.
+            </p>
+            <p>
+              The only way to make JoJo‑style time stop “work” is to admit that the user and their Stand are
+              <strong>outside the laws of physics</strong>, with the power to override or rewrite them. In
+              other words: it’s not a clever use of real‑world mechanics—it’s a narrative superpower, and
+              that’s exactly why it’s so fun.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="footer-note">
+          Built as a single‑file demo • <span>All CSS and JS inline</span> • Replace placeholder images with your own JoJo art
+        </div>
+        <div class="footer-links">
+          <div class="footer-pill">Newton’s laws</div>
+          <div class="footer-pill">Relativity</div>
+          <div class="footer-pill">JoJo Stands</div>
+          <div class="footer-pill">Time stop what‑ifs</div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Handle start screen
+    const startScreen = document.getElementById("start-screen");
+    const page = document.getElementById("page");
+    const enterBtn = document.getElementById("enter-btn");
+
+    enterBtn.addEventListener("click", () => {
+      startScreen.classList.add("hidden");
+      page.classList.add("visible");
+      // Trigger initial reveal
+      revealOnScroll();
+    });
+
+    // Smooth scroll for nav links
+    document.querySelectorAll(".nav-link[data-scroll]").forEach((link) => {
+      link.addEventListener("click", () => {
+        const target = document.querySelector(link.getAttribute("data-scroll"));
+        if (!target) return;
+        window.scrollTo({
+          top: target.offsetTop - 80,
+          behavior: "smooth",
+        });
+      });
+    });
+
+    // Scroll reveal
+    const revealElements = document.querySelectorAll(".reveal");
+
+    function revealOnScroll() {
+      const triggerBottom = window.innerHeight * 0.85;
+      revealElements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < triggerBottom) {
+          el.classList.add("visible");
+        }
+      });
+    }
+
+    window.addEventListener("scroll", revealOnScroll);
+    window.addEventListener("load", () => {
+      // If user reloads after start screen is gone
+      if (startScreen.classList.contains("hidden")) {
+        page.classList.add("visible");
+        revealOnScroll();
+      }
+    });
+  </script>
+</body>
+</html>
